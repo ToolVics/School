@@ -13,6 +13,9 @@ Cluster the provided course files into 4-10 modules. Return JSON {"modules": [{"
 
 
 def cluster_modules(final_entries: List[Dict]) -> Dict:
+    if not final_entries:
+        log_info("No final entries available; skipping module clustering.")
+        return {'modules': []}
     router = ModelRouter()
     summary_text = '\n'.join(f"{item.get('filename')}: {item.get('high_level_summary', '')}" for item in final_entries)
     result = router.complete(f"{MODULE_PROMPT}\n{summary_text}", json_mode=True)

@@ -1,9 +1,10 @@
 from __future__ import annotations
 import json
+import os
 import streamlit as st
 from app.core.pipeline import Pipeline
 from app.config import RAW_KB_PATH, FINAL_KB_PATH, MODULES_PATH
-from app.utils.file_utils import list_files
+from app.utils.file_utils import list_files, read_jsonl
 from app.utils.pdf_utils import generate_pdf_from_knowledge
 
 st.set_page_config(page_title="Course AI Pipeline", layout="wide")
@@ -17,22 +18,22 @@ if 'pipeline_data' not in st.session_state:
 def load_jsonl(path: str):
     if not path:
         return []
-    try:
-        with open(path, 'r', encoding='utf-8', errors='ignore') as f:
-            return [json.loads(line) if line.strip().startswith('{') else eval(line) for line in f if line.strip()]
-    except FileNotFoundError:
-        return []
+    return read_jsonl(path)
 
 
 def render_run_status():
     st.header("📤 Run & Status")
     st.session_state.input_folder = st.text_input("Input folder", st.session_state.input_folder)
-    if st.button("📦 Build Complete Knowledge Base"):
+    api_key_set = bool(os.environ.get("OPENAI_API_KEY"))
+    if not api_key_set:
+        st.error("OPENAI_API_KEY is not set. Please add it to your environment or .env file before running the pipeline.")
+    run_disabled = not api_key_set or not st.session_state.input_folder
+    if st.button("📦 Build Complete Knowledge Base", disabled=run_disabled):
         pipeline = Pipeline(st.session_state.input_folder)
         st.session_state.pipeline_data = pipeline.run()
     files = list_files(st.session_state.input_folder)
     st.write(f"Found {len(files)} files")
-    st.progress(min(1.0, len(files) / 10))
+    st.progress(min(1.0, len(files) / 10) if files else 0)
 
 
 def render_supervisor():
@@ -53,11 +54,15 @@ def render_chat():
 
 def render_modules():
     st.header("🧩 Module Clusters")
-    try:
-        with open(MODULES_PATH, 'r', encoding='utf-8') as f:
-            data = json.load(f)
-    except FileNotFoundError:
-        data = {'modules': []}
+    data = {'modules': []}
+    if MODULES_PATH and os.path.exists(MODULES_PATH):
+        try:
+            with open(MODULES_PATH, 'r', encoding='utf-8') as f:
+                content = f.read().strip()
+                if content:
+                    data = json.loads(content)
+        except (json.JSONDecodeError, OSError):
+            data = {'modules': []}
     st.json(data)
 
 

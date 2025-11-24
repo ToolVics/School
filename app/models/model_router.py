@@ -18,7 +18,11 @@ class ModelRouter:
     def __init__(self, api_key: Optional[str] = None, models: Optional[List[str]] = None):
         key = api_key or os.environ.get("OPENAI_API_KEY")
         if not key:
-            log_error("OPENAI_API_KEY not set; API calls will fail until provided.")
+            message = (
+                "OPENAI_API_KEY not set; please set it in your environment or .env file before running the pipeline."
+            )
+            log_error(message)
+            raise RuntimeError(message)
         self.client = OpenAI(api_key=key)
         self.models = models or DEFAULT_MODELS
 
