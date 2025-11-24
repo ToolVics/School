@@ -24,12 +24,16 @@ def load_jsonl(path: str):
 def render_run_status():
     st.header("📤 Run & Status")
     st.session_state.input_folder = st.text_input("Input folder", st.session_state.input_folder)
-    if st.button("📦 Build Complete Knowledge Base"):
+    api_key_set = bool(os.environ.get("OPENAI_API_KEY"))
+    if not api_key_set:
+        st.error("OPENAI_API_KEY is not set. Please add it to your environment or .env file before running the pipeline.")
+    run_disabled = not api_key_set or not st.session_state.input_folder
+    if st.button("📦 Build Complete Knowledge Base", disabled=run_disabled):
         pipeline = Pipeline(st.session_state.input_folder)
         st.session_state.pipeline_data = pipeline.run()
     files = list_files(st.session_state.input_folder)
     st.write(f"Found {len(files)} files")
-    st.progress(min(1.0, len(files) / 10))
+    st.progress(min(1.0, len(files) / 10) if files else 0)
 
 
 def render_supervisor():

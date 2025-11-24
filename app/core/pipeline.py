@@ -24,6 +24,9 @@ class Pipeline:
         final_entries: List[Dict] = []
         files = list_files(self.input_folder)
         log_info(f"Pipeline discovered {len(files)} files")
+        if not files:
+            log_info("No files found; skipping processing and returning empty results.")
+            return {'raw': raw_entries, 'final': final_entries, 'modules': {'modules': []}}
         for path in files:
             text, links = extract_file(path)
             plan = plan_for_file(path, text[:400], len(links))
@@ -35,7 +38,10 @@ class Pipeline:
             refined = refine_entry(path, raw_entry.get('raw_summary', ''), link_summaries)
             append_jsonl(FINAL_KB_PATH, refined)
             final_entries.append(refined)
-        modules = cluster_modules(final_entries)
+        if final_entries:
+            modules = cluster_modules(final_entries)
+        else:
+            modules = {'modules': []}
         return {'raw': raw_entries, 'final': final_entries, 'modules': modules}
 
     def reload_datastores(self) -> Dict[str, List[Dict]]:
