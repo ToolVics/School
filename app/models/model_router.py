@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 from typing import Any, Dict, List, Optional
 
+from dotenv import find_dotenv, load_dotenv
 from openai import OpenAI
 
 from app.utils.log_utils import log_error
@@ -16,6 +17,11 @@ DEFAULT_MODELS = [
 
 class ModelRouter:
     def __init__(self, api_key: Optional[str] = None, models: Optional[List[str]] = None):
+        # Ensure .env is loaded even if config was not imported first (e.g., direct CLI usage)
+        dotenv_path = find_dotenv()
+        if dotenv_path:
+            load_dotenv(dotenv_path)
+
         key = api_key or os.environ.get("OPENAI_API_KEY")
         if not key:
             message = (

@@ -1,5 +1,12 @@
 import os
 
+from dotenv import find_dotenv, load_dotenv
+
+# Ensure environment variables load even when executed from nested paths (e.g., Streamlit)
+dotenv_path = find_dotenv()
+if dotenv_path:
+    load_dotenv(dotenv_path)
+
 RAW_KB_PATH = os.path.join('app', 'db', 'knowledge_raw.jsonl')
 FINAL_KB_PATH = os.path.join('app', 'db', 'knowledge_final.jsonl')
 MODULES_PATH = os.path.join('app', 'db', 'modules.json')

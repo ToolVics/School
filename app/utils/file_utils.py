@@ -55,3 +55,11 @@ def list_files(folder: str) -> list[str]:
         for file in files:
             paths.append(os.path.join(root, file))
     return paths
+
+
+def remove_file_if_exists(path: str) -> None:
+    """Delete a file if present without raising when missing."""
+    try:
+        os.remove(path)
+    except FileNotFoundError:
+        return
