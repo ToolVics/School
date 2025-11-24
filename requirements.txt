@@ -1,0 +1,14 @@
+openai>=1.14.0
+streamlit
+pdfplumber
+PyMuPDF
+python-docx
+python-pptx
+pytesseract
+Pillow
+python-dotenv
+requests
+beautifulsoup4
+fpdf2
+tqdm
+numpy
