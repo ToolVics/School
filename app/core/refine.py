@@ -1,5 +1,7 @@
 from __future__ import annotations
+import json
 from typing import Dict, List
+
 from app.models.model_router import ModelRouter
 from app.utils.log_utils import log_info
 
@@ -15,8 +17,8 @@ def refine_entry(filename: str, raw_summary: str, link_summaries: List[Dict]) ->
     result = router.complete(prompt, json_mode=True)
     output_text = result.get('output_text', '{}')
     try:
-        refined = eval(output_text)
-    except Exception:  # noqa: BLE001
+        refined = json.loads(output_text)
+    except json.JSONDecodeError:
         refined = {
             'filename': filename,
             'high_level_summary': raw_summary[:500],

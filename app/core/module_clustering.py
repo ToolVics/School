@@ -1,6 +1,7 @@
 from __future__ import annotations
 import json
-from typing import List, Dict
+from typing import Dict, List
+
 from app.models.model_router import ModelRouter
 from app.config import MODULES_PATH
 from app.utils.file_utils import ensure_dir
@@ -17,8 +18,8 @@ def cluster_modules(final_entries: List[Dict]) -> Dict:
     result = router.complete(f"{MODULE_PROMPT}\n{summary_text}", json_mode=True)
     output_text = result.get('output_text', '{"modules": []}')
     try:
-        modules = eval(output_text)
-    except Exception:  # noqa: BLE001
+        modules = json.loads(output_text)
+    except json.JSONDecodeError:
         modules = {'modules': []}
     ensure_dir('app/db')
     with open(MODULES_PATH, 'w', encoding='utf-8') as f:

@@ -1,5 +1,7 @@
 from __future__ import annotations
+import json
 from typing import Dict
+
 from app.models.model_router import ModelRouter
 from app.utils.log_utils import log_info
 
@@ -14,8 +16,8 @@ def plan_for_file(filename: str, text_preview: str, links_count: int) -> Dict:
     result = router.complete(prompt, json_mode=True)
     output_text = result.get('output_text', '{}')
     try:
-        plan = eval(output_text)
-    except Exception:  # noqa: BLE001
+        plan = json.loads(output_text)
+    except json.JSONDecodeError:
         plan = {
             'summarize_main': True,
             'follow_links': links_count > 0,

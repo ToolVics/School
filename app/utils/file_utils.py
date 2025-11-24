@@ -1,3 +1,4 @@
+import json
 import os
 import pathlib
 from typing import Optional
@@ -28,14 +29,22 @@ def load_text(path: str, default: str = '') -> str:
 def append_jsonl(path: str, obj: dict) -> None:
     ensure_dir(os.path.dirname(path))
     with open(path, 'a', encoding='utf-8') as f:
-        f.write(f"{obj}\n")
+        f.write(json.dumps(obj, ensure_ascii=False) + "\n")
 
 
 def read_jsonl(path: str) -> list[dict]:
     if not os.path.exists(path):
         return []
     with open(path, 'r', encoding='utf-8') as f:
-        return [eval(line.strip()) for line in f if line.strip()]
+        entries = []
+        for line in f:
+            if not line.strip():
+                continue
+            try:
+                entries.append(json.loads(line))
+            except json.JSONDecodeError:
+                continue
+        return entries
 
 
 def list_files(folder: str) -> list[str]:
