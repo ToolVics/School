@@ -1,5 +1,10 @@
 from __future__ import annotations
 
+import os
+import json
+from typing import Dict, List
+
+from app.config import FINAL_KB_PATH, RAW_KB_PATH, MODULES_PATH
 import json
 from typing import Dict, List
 
@@ -18,6 +23,22 @@ class Pipeline:
     def __init__(self, input_folder: str):
         self.input_folder = input_folder
         ensure_dir('app/db')
+        self._ensure_api_key()
+
+    @staticmethod
+    def _ensure_api_key() -> None:
+        if not os.environ.get("OPENAI_API_KEY"):
+            raise RuntimeError(
+                "OPENAI_API_KEY is not set. Please add it to your environment or .env file before running the pipeline."
+            )
+
+    @staticmethod
+    def _reset_datastores() -> None:
+        remove_file_if_exists(RAW_KB_PATH)
+        remove_file_if_exists(FINAL_KB_PATH)
+        remove_file_if_exists(MODULES_PATH)
+        ensure_dir('app/db')
+        log_info("Cleared previous knowledge base outputs.")
 
     def run(self) -> Dict[str, List[Dict]]:
         raw_entries: List[Dict] = []
@@ -64,7 +85,7 @@ class Pipeline:
             final_entries = []
 
         try:
-            with open('app/db/modules.json', 'r', encoding='utf-8', errors='ignore') as f:
+            with open(MODULES_PATH, 'r', encoding='utf-8', errors='ignore') as f:
                 content = f.read().strip()
                 modules = json.loads(content) if content else {'modules': []}
         except FileNotFoundError:

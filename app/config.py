@@ -1,5 +1,9 @@
 import os
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 RAW_KB_PATH = os.path.join('app', 'db', 'knowledge_raw.jsonl')
 FINAL_KB_PATH = os.path.join('app', 'db', 'knowledge_final.jsonl')
 MODULES_PATH = os.path.join('app', 'db', 'modules.json')
