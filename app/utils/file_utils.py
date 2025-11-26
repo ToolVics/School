@@ -77,3 +77,19 @@ def remove_file_if_exists(path: str) -> None:
         os.remove(path)
     except FileNotFoundError:
         return
+
+
+def list_directories(root: str) -> list[str]:
+    """Return immediate subdirectories for simple folder selection in the UI."""
+    if not root or not os.path.exists(root):
+        return []
+    try:
+        entries = [entry for entry in os.listdir(root)]
+    except OSError:
+        return []
+    paths: list[str] = []
+    for entry in entries:
+        candidate = os.path.join(root, entry)
+        if os.path.isdir(candidate):
+            paths.append(candidate)
+    return sorted(paths)

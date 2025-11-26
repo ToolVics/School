@@ -5,7 +5,7 @@ import streamlit as st
 from app.core.pipeline import Pipeline
 from app.core.refine import refine_entry
 from app.config import RAW_KB_PATH, FINAL_KB_PATH, MODULES_PATH
-from app.utils.file_utils import list_files, read_jsonl, rewrite_jsonl
+from app.utils.file_utils import list_directories, list_files, read_jsonl, rewrite_jsonl
 from app.utils.pdf_utils import generate_pdf_from_knowledge
 from app.langchain_support import build_langchain_chat_chain
 
@@ -34,6 +34,24 @@ def render_run_status():
         st.session_state.input_folder,
         help="Path on disk containing PDFs, DOCX, PPTX, HTML, images, or text files.",
     )
+
+    with st.expander("Browse for a folder", expanded=False):
+        browser_root = st.text_input(
+            "Browse from directory",
+            value=os.getcwd(),
+            help="Change this to explore other locations on your machine.",
+        )
+        available_subdirs = list_directories(browser_root)
+        if not available_subdirs:
+            st.info("No subfolders found at this location or access denied.")
+        else:
+            pick_default = 0
+            if st.session_state.input_folder in available_subdirs:
+                pick_default = available_subdirs.index(st.session_state.input_folder)
+            chosen = st.selectbox("Pick a subfolder", options=available_subdirs, index=pick_default)
+            if st.button("Use selected folder", type="secondary"):
+                st.session_state.input_folder = chosen
+                st.success(f"Selected folder: {chosen}")
     api_key_set = bool(os.environ.get("OPENAI_API_KEY"))
     if not api_key_set:
         st.error("OPENAI_API_KEY is not set. Please add it to your environment or .env file before running the pipeline.")
