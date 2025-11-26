@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Optional
 from dotenv import find_dotenv, load_dotenv
 from openai import OpenAI
 
+from app.config import get_model
 from app.utils.log_utils import log_error
 
 
@@ -96,9 +97,9 @@ class ModelRouter:
     @staticmethod
     def _build_model_preference(models_override: Optional[List[str]] = None) -> List[str]:
         base = models_override or [
-            os.environ.get("PRIMARY_MODEL", "gpt-5.1-mini"),
-            "gpt-5-mini",
-            "gpt-5-nano",
+            os.environ.get("PRIMARY_MODEL", get_model("summarize")),
+            get_model("refine"),
+            get_model("link_follow"),
         ]
         ordered: List[str] = []
         for model_name in base:

@@ -2,6 +2,9 @@ from __future__ import annotations
 import io
 import os
 import re
+import shutil
+from urllib.parse import urlparse
+
 import fitz  # PyMuPDF
 import pdfplumber
 import pytesseract
@@ -10,15 +13,27 @@ from bs4 import BeautifulSoup
 from docx import Document
 from pptx import Presentation
 from typing import Tuple
-from app.utils.log_utils import log_error
+
+from app.utils.log_utils import log_error, log_info
+
+
+DOI_PATTERN = re.compile(r"(10\.\d{4,9}/[-._;()/:A-Za-z0-9]+)")
 
 
 def extract_pdf(path: str) -> str:
     try:
         with pdfplumber.open(path) as pdf:
             text = ''.join(page.extract_text() or '' for page in pdf.pages)
+        if not text.strip():
+            try:
+                with fitz.open(path) as doc:
+                    text = ''.join(page.get_text() or '' for page in doc)
+            except Exception as inner_exc:  # noqa: BLE001
+                log_error(f"PDF fallback extraction failed for {path}: {inner_exc}")
         if len(text) < 100:
             text += _ocr_pdf(path)
+        if not text.strip():
+            log_info("PDF contains no extractable text. Skipping summarization.")
         return text
     except Exception as exc:  # noqa: BLE001
         log_error(f"PDF extraction failed for {path}: {exc}")
@@ -27,6 +42,9 @@ def extract_pdf(path: str) -> str:
 
 def _ocr_pdf(path: str) -> str:
     content = ''
+    if not shutil.which("tesseract"):
+        log_info("Tesseract not installed – skipping OCR fallback")
+        return content
     try:
         doc = fitz.open(path)
         for page in doc:
@@ -89,6 +107,30 @@ def extract_html(path: str) -> Tuple[str, list[str]]:
         return '', []
 
 
+def _validate_links(raw_links: list[str], text: str) -> list[str]:
+    valid: list[str] = []
+    for link in raw_links:
+        if not link:
+            continue
+        candidate = link.strip()
+        if not candidate:
+            continue
+        parsed = urlparse(candidate)
+        if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+            continue
+        if parsed.netloc and parsed.path in {"", "/"} and "doi.org" not in parsed.netloc:
+            continue
+        if parsed.netloc.endswith("doi.org") and parsed.path in {"", "/"}:
+            match = DOI_PATTERN.search(text or "")
+            if match:
+                candidate = f"https://doi.org/{match.group(1)}"
+            else:
+                continue
+        if candidate not in valid:
+            valid.append(candidate)
+    return valid
+
+
 def extract_text_generic(path: str) -> Tuple[str, list[str]]:
     ext = os.path.splitext(path)[1].lower()
     links: list[str] = []
@@ -111,4 +153,5 @@ def extract_text_generic(path: str) -> Tuple[str, list[str]]:
             log_error(f"Fallback text extraction failed for {path}: {exc}")
             text = ''
     links += re.findall(r'https?://\S+', text)
-    return text, links
+    cleaned_links = _validate_links(links, text)
+    return text, cleaned_links

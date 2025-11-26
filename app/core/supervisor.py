@@ -7,7 +7,12 @@ from app.models.model_router import ModelRouter
 from app.utils.log_utils import log_info
 
 SUPERVISOR_PROMPT = """
-You are a supervisor orchestrating course file processing. Return JSON with keys: summarize_main (bool), follow_links (bool), max_links_to_follow (int), notes (string). Choose follow_links true when there are external references or embedded media. Keep max_links_to_follow between 0 and 5.
+You are a supervisor orchestrating course file processing.
+Infer the course theme, assignment purpose, instructor intent, and academic relevance of each link.
+Determine whether the PDF is an excerpt, full chapter, or scanned copy and when OCR is unnecessary.
+Return JSON with keys: summarize_main (bool), follow_links (bool), max_links_to_follow (int), notes (string).
+Choose follow_links true when links appear academically relevant (citations, readings, media) and avoid navigation/login links.
+Keep max_links_to_follow between 0 and 5.
 """
 
 

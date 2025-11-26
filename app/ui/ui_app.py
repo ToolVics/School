@@ -90,7 +90,7 @@ def render_run_status():
     run_disabled = not api_key_set or not st.session_state.input_folder or st.session_state.running
     start_col, cancel_col = st.columns([3, 1])
     with start_col:
-        if st.button("📦 Build Complete Knowledge Base", disabled=run_disabled, use_container_width=True):
+        if st.button("📦 Build Complete Knowledge Base", disabled=run_disabled, width="stretch"):
             st.session_state.cancel_requested = False
             st.session_state.running = True
             try:
@@ -104,7 +104,7 @@ def render_run_status():
                 st.session_state.running = False
                 st.session_state.cancel_requested = False
     with cancel_col:
-        if st.button("Cancel", type="primary", disabled=not st.session_state.running, use_container_width=True):
+        if st.button("Cancel", type="primary", disabled=not st.session_state.running, width="stretch"):
             st.session_state.cancel_requested = True
             status_placeholder.warning("Cancellation requested; finishing current step...")
 
@@ -124,7 +124,7 @@ def render_supervisor():
     if not plans:
         st.info("Run the pipeline to see supervisor routing decisions per file.")
         return
-    st.dataframe(plans, use_container_width=True, hide_index=True)
+    st.dataframe(plans, width="stretch", hide_index=True)
 
 
 def render_raw():
@@ -165,7 +165,7 @@ def render_modules():
     if not data.get('modules'):
         st.info("No modules available yet. Run the pipeline after processing files.")
         return
-    st.dataframe(data.get('modules', []), use_container_width=True, hide_index=True)
+    st.dataframe(data.get('modules', []), width="stretch", hide_index=True)
 
 
 def render_refine():
