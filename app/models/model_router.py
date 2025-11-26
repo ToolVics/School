@@ -46,11 +46,17 @@ class ModelRouter:
         model: Optional[str] = None,
         **kwargs: Any,
     ) -> Dict[str, Any]:
-        payload = {
-            "input": [{"role": "user", "content": prompt}],
-        }
+        messages = []
         if json_mode:
-            payload["response_format"] = {"type": "json_object"}
+            messages.append({
+                "role": "system",
+                "content": "Return only a single valid JSON object without commentary.",
+            })
+        messages.append({"role": "user", "content": prompt})
+
+        payload = {
+            "input": messages,
+        }
         payload.update({k: v for k, v in kwargs.items() if v is not None})
         response = self._create_response(model=model, **payload)
         return self._extract_output(response)

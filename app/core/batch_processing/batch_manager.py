@@ -16,12 +16,19 @@ SUMMARY_PROMPT = (
 def _parse_chunk_response(payload: str) -> Dict[str, List[str]]:
     try:
         data = json.loads(payload)
+        raw_value = data.get("raw_summary", "")
+        if isinstance(raw_value, list):
+            raw_value = "\n".join(str(item) for item in raw_value if item)
+        elif not isinstance(raw_value, str):
+            raw_value = str(raw_value)
+        topics_value = data.get("topics", [])
+        topics = topics_value if isinstance(topics_value, list) else []
         return {
-            "raw_summary": data.get("raw_summary", ""),
-            "topics": data.get("topics", []) if isinstance(data.get("topics"), list) else [],
+            "raw_summary": raw_value,
+            "topics": topics,
         }
     except json.JSONDecodeError:
-        return {"raw_summary": payload, "topics": []}
+        return {"raw_summary": str(payload), "topics": []}
 
 
 def summarize_chunks(filename: str, text: str) -> Dict:
@@ -30,12 +37,19 @@ def summarize_chunks(filename: str, text: str) -> Dict:
     summaries: List[str] = []
     topics: List[str] = []
     for chunk in chunks:
+        if not chunk.strip():
+            continue
         result = router.complete(f"{SUMMARY_PROMPT}\n\n{chunk}", json_mode=True, model=SUMMARY_MODEL)
         parsed = _parse_chunk_response(result.get("output_text", ""))
-        summaries.append(parsed.get("raw_summary", ""))
+        raw_summary = parsed.get("raw_summary", "")
+        if isinstance(raw_summary, list):
+            raw_summary = "\n".join(str(item) for item in raw_summary if item)
+        elif not isinstance(raw_summary, str):
+            raw_summary = str(raw_summary)
+        summaries.append(raw_summary)
         topics.extend(parsed.get("topics", []))
     raw_summary = "\n".join(filter(None, summaries))
-    dedup_topics = list(dict.fromkeys([t for t in topics if t]))[:10]
+    dedup_topics = list(dict.fromkeys([str(t) for t in topics if t]))[:10]
     log_info(f"Summaries generated for {filename}: {len(chunks)} chunks")
     return {
         "type": "raw_file",
