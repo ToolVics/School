@@ -32,6 +32,20 @@ def append_jsonl(path: str, obj: dict) -> None:
         f.write(json.dumps(obj, ensure_ascii=False) + "\n")
 
 
+def rewrite_jsonl(path: str, entries: list[dict]) -> None:
+    """Rewrite an entire JSONL file with provided entries."""
+    ensure_dir(os.path.dirname(path))
+    with open(path, 'w', encoding='utf-8') as f:
+        for entry in entries:
+            f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+
+
+def write_json(path: str, obj: dict) -> None:
+    ensure_dir(os.path.dirname(path))
+    with open(path, 'w', encoding='utf-8') as f:
+        json.dump(obj, f, ensure_ascii=False, indent=2)
+
+
 def read_jsonl(path: str) -> list[dict]:
     if not os.path.exists(path):
         return []
@@ -63,3 +77,19 @@ def remove_file_if_exists(path: str) -> None:
         os.remove(path)
     except FileNotFoundError:
         return
+
+
+def list_directories(root: str) -> list[str]:
+    """Return immediate subdirectories for simple folder selection in the UI."""
+    if not root or not os.path.exists(root):
+        return []
+    try:
+        entries = [entry for entry in os.listdir(root)]
+    except OSError:
+        return []
+    paths: list[str] = []
+    for entry in entries:
+        candidate = os.path.join(root, entry)
+        if os.path.isdir(candidate):
+            paths.append(candidate)
+    return sorted(paths)

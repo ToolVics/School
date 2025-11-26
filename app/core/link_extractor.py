@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup
 from app.utils.file_utils import ensure_dir, save_binary
 from app.extractors.extract_text import extract_text_generic
 from app.utils.log_utils import log_info, log_error
-from app.config import DOWNLOADS_DIR
+from app.config import DOWNLOADS_DIR, LINK_MODEL
 from app.models.model_router import ModelRouter
 
 SAFE_EXTENSIONS = {'.pdf', '.html', '.htm', '.png', '.jpg', '.jpeg', '.bmp', '.tiff'}
@@ -32,14 +32,14 @@ def _download_file(url: str) -> str:
 def _infer_from_url(url: str) -> str:
     router = ModelRouter()
     prompt = f"The URL {url} could not be downloaded. Infer likely page content in 5 sentences."
-    result = router.complete(prompt)
+    result = router.complete(prompt, model=LINK_MODEL)
     return result.get('output_text', '')
 
 
 def _process_youtube(url: str) -> str:
     router = ModelRouter()
     prompt = f"Infer transcript highlights for YouTube video {url} in 5 bullet points."
-    result = router.complete(prompt)
+    result = router.complete(prompt, model=LINK_MODEL)
     return result.get('output_text', '')
 
 

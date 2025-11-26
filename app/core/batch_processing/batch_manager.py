@@ -2,6 +2,7 @@ from __future__ import annotations
 import json
 from typing import Dict, List
 
+from app.config import SUMMARY_MODEL
 from app.core.batch_processing.batch_chunker import chunk_text
 from app.models.model_router import ModelRouter
 from app.utils.log_utils import log_info
@@ -29,7 +30,7 @@ def summarize_chunks(filename: str, text: str) -> Dict:
     summaries: List[str] = []
     topics: List[str] = []
     for chunk in chunks:
-        result = router.complete(f"{SUMMARY_PROMPT}\n\n{chunk}", json_mode=True)
+        result = router.complete(f"{SUMMARY_PROMPT}\n\n{chunk}", json_mode=True, model=SUMMARY_MODEL)
         parsed = _parse_chunk_response(result.get("output_text", ""))
         summaries.append(parsed.get("raw_summary", ""))
         topics.extend(parsed.get("topics", []))

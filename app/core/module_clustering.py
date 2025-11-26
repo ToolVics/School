@@ -3,7 +3,7 @@ import json
 from typing import Dict, List
 
 from app.models.model_router import ModelRouter
-from app.config import MODULES_PATH
+from app.config import MODULES_PATH, CLUSTER_MODEL
 from app.utils.file_utils import ensure_dir
 from app.utils.log_utils import log_info
 
@@ -18,7 +18,7 @@ def cluster_modules(final_entries: List[Dict]) -> Dict:
         return {'modules': []}
     router = ModelRouter()
     summary_text = '\n'.join(f"{item.get('filename')}: {item.get('high_level_summary', '')}" for item in final_entries)
-    result = router.complete(f"{MODULE_PROMPT}\n{summary_text}", json_mode=True)
+    result = router.complete(f"{MODULE_PROMPT}\n{summary_text}", json_mode=True, model=CLUSTER_MODEL)
     output_text = result.get('output_text', '{"modules": []}')
     try:
         modules = json.loads(output_text)
