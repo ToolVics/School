@@ -2,6 +2,7 @@ from __future__ import annotations
 import json
 from typing import Dict
 
+from app.config import SUPERVISOR_MODEL
 from app.models.model_router import ModelRouter
 from app.utils.log_utils import log_info
 
@@ -13,7 +14,7 @@ You are a supervisor orchestrating course file processing. Return JSON with keys
 def plan_for_file(filename: str, text_preview: str, links_count: int) -> Dict:
     router = ModelRouter()
     prompt = f"{SUPERVISOR_PROMPT}\nFile: {filename}\nPreview: {text_preview[:800]}\nLinks: {links_count}"
-    result = router.complete(prompt, json_mode=True)
+    result = router.complete(prompt, json_mode=True, model=SUPERVISOR_MODEL)
     output_text = result.get('output_text', '{}')
     try:
         plan = json.loads(output_text)

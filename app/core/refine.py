@@ -2,6 +2,7 @@ from __future__ import annotations
 import json
 from typing import Dict, List
 
+from app.config import REFINE_MODEL
 from app.models.model_router import ModelRouter
 from app.utils.log_utils import log_info
 
@@ -14,7 +15,7 @@ def refine_entry(filename: str, raw_summary: str, link_summaries: List[Dict]) ->
     router = ModelRouter()
     link_text = '\n'.join(item.get('content', '') for item in link_summaries)
     prompt = f"{REFINE_PROMPT}\nFILE: {filename}\nRAW SUMMARY:\n{raw_summary}\nLINK INSIGHTS:\n{link_text}"
-    result = router.complete(prompt, json_mode=True)
+    result = router.complete(prompt, json_mode=True, model=REFINE_MODEL)
     output_text = result.get('output_text', '{}')
     try:
         refined = json.loads(output_text)
